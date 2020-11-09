@@ -1,0 +1,174 @@
+---
+title: "r-homework-2"
+output: html_document
+author: Riley Maher
+date: Novmeber 8, 2020
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Homework Assignment 2
+
+## Import Packages
+
+```{r}
+library("ggplot2")
+library("dplyr")
+memory.limit(size=50000)
+memory.size(max=TRUE)
+```
+
+## Using sample CSV
+
+```{r}
+# Reading in the sample CSV I made
+total_sample <- read.csv('sample.csv', stringsAsFactors = TRUE)
+head(total_sample)
+```
+
+I had to do this because my computer kept crashing.
+
+## Initial Data Exploration
+
+### Gender Split
+
+```{r}
+# Reclassifying the genders
+# 0=unknown, 1=male, 2=female
+total_sample$gender <- ifelse(total_sample$gender == 0, "Unkown",
+                                  ifelse(total_sample$gender == 1, "Male", "Female"))
+
+# Seeing the split of genders who rented bikes
+gender_split <- ggplot(total_sample, aes(x=gender)) + geom_bar()
+gender_split
+```
+
+We can see from this distribution that the majority of bikers are male.
+
+### Birth Year
+
+```{r}
+# Finding the median birth year of riders
+median_birth_year <- median(total_sample$birth.year, na.rm=TRUE)
+median_birth_year
+
+# Finding the average birth year of riders
+mean_birth_year <- round(mean(total_sample$birth.year, na.rm=TRUE))
+mean_birth_year
+
+# Youngest rider
+youngest_rider <- max(total_sample$birth.year, na.rm = TRUE)
+youngest_rider
+
+# Oldest rider
+oldest_rider <- min(total_sample$birth.year, na.rm = TRUE)
+oldest_rider
+```
+The birth year of riders range from the oldest being `r oldest_rider` and the youngest being `r youngest_rider`. The median birth year of riders is `r median_birth_year` and the average birth year is `r mean_birth_year`. The average birth year shows us that bikers are relatively younger. The median shows us that half of all riders are 36 or under, proving that a substantial amount of riders are younger.
+
+```{r}
+# Birth year histogram
+birth_hist <- ggplot(total_sample, aes(x=birth.year,)) + geom_histogram(bins = 30)
+birth_hist
+```
+
+This histogram shows us that the majority of bikers skew younger. There are some very large outliers, but the years of those outliers lead me to believe they aren't legitimate, as no one born in the 1800s would be alive or riding a bike in 2019. Without the outliers, the graph would be relatively normally distributed with a slight skew left, making complete sense as younger people will bike more than older people.
+
+### Trip Duration
+
+```{r}
+# Average length of a bike ride
+duration_mean <- mean(total_sample$tripduration, na.rm=TRUE)
+duration_mean
+
+# Standard deviation of bike rides
+duration_sd <- sd(total_sample$tripduration, na.rm=TRUE)
+duration_sd
+
+# Range of all bike rides
+duration_range <- range(total_sample$tripduration, na.rm=TRUE)
+duration_range
+```
+The average trip duration is `r duration_mean` and the standard deviation of trip duration is `r duration_sd`. The shortest trip duration is `r duration_range[1]` and the longest trip duration was `r duration_range[2]`. The large difference in range, coupled with the large standard deviation when compared to the mean, could show that people do not return their bikes after use, leading to increased trip duration.
+
+### Subscribers
+
+```{r}
+# Seeing the split of genders who rented bikes
+subscriber_split <- ggplot(total_sample, aes(x=usertype)) + geom_bar()
+subscriber_split
+```
+
+This gives us an idea of how many users actually have subscriptions to the bike service, allowing us to know if a subscription service is smart or not. From this result, it seems smart to have.
+
+### Bike ID
+
+```{r}
+# Seeing the distribution of the bikes used
+bike_tally <- tally(group_by(total_sample, bikeid), sort=TRUE)
+bike_tally[1:5, 1:2]
+```
+The most used bikes have IDs `r bike_tally[1, 1]`, `r bike_tally[2, 1]`, `r bike_tally[3, 1]`, `r bike_tally[4, 1]`, and `r bike_tally[5, 1]` respectively. The IDs are not all close together in number, leading me to believe the bikes are not in close proximity to each other in geo-location. This info could be used to determine which bikes need to be replaced by number of uses per region.
+
+## Exploratory Data Analysis
+
+### Which bikes are used in which months?
+```{r, cache=TRUE}
+# Finding the month of bikes
+heatmap_x <- total_sample[1:nrow(total_sample), c("bikeid", "starttime")]
+heatmap_x$starttime <- months(as.Date(total_sample$starttime))
+heatmap_y <- tally(group_by(total_sample, bikeid))
+merged_data <- merge(heatmap_x, heatmap_y, by='bikeid')
+merged_data$bikeid <- as.character(merged_data$bikeid)
+
+# Heatmap 
+bike_heatmap <- ggplot(total_sample, aes(x=merged_data[1:nrow(merged_data), 1], y=merged_data[1:nrow(merged_data), 2], fill=merged_data[1:nrow(merged_data), 3])) + geom_tile()
+bike_heatmap
+```
+
+The heat map was supposed to show the use of each bike by its ID. The significance of this would be to give a visual representation of bikes that have been overused to know if they should be replaced or not. It could also be used to see where the bikes are located by ID and used to determine which locations have higher use of bikes. Due to so many bike IDs being present, the x-axis being illegible, making this graph not entirely helpful.
+
+### Which months had more bike us on average?
+
+```{r, cache=TRUE}
+# Barplot of average bike use per month
+bike_use_per_month <- round(tapply(total_sample$tripduration, months(as.Date(total_sample$starttime)), mean, na.rm=TRUE), )
+
+barplot(bike_use_per_month, las=2)
+```
+
+The months with the most use are the Spring/Summer months. It starts to get warm in April, so the largest use time there could be an indication of people being happy with Winter being over. The increased use of May through July could be people just out an about enjoying warm weather. We don't see a huge decrease in use in the Winter months, indicating bikes are relatively important for travel.
+
+### Which ages travel longer?
+
+```{r, cache=TRUE}
+#Scatterplot of ages vs. distance
+ages_dist_scatter <- ggplot(total_sample, aes(x=birth.year, y=tripduration)) + geom_point(size=2, alpha=.25)
+ages_dist_scatter
+```
+
+```{r, cache=TRUE}
+#Scatterplot of ages vs. distance with reduced y-axis
+ages_dist_scatter_2 <- ggplot(total_sample, aes(x=birth.year, y=tripduration)) + geom_point(size=2, alpha=.25) + ylim(0,3750)
+ages_dist_scatter_2
+```
+
+I included both scatterplots, one with outliers and one without, just to show the full effect of the visualization. As we can see, the younger people are, the higher their trip durations go, and the older people are, the lower their highest trip durations tend to go.
+
+### Which gender travels longer?
+
+```{r, cache=TRUE}
+# Boxplot of gender vs. trip duration
+gender_dist_box <- ggplot(total_sample, aes(x=gender, y=tripduration, group=gender)) + geom_point(size=2, alpha=0.8) + geom_boxplot(outlier.colour="red", outlier.size=2)
+gender_dist_box
+```
+
+```{r, cache=TRUE}
+# Boxplot of gender vs. trip duration with reduced y-axis
+gender_dist_box_2 <- ggplot(total_sample, aes(x=gender, y=tripduration, group=gender)) + geom_point(size=2, alpha=0.8) + geom_boxplot(outlier.colour="red", outlier.size=2) + ylim(0,3750)
+gender_dist_box_2
+```
+
+These graphs suffer the same issue with outliers as the scatterplots, so I kept both to show the full effect again. As we can see for all the reported genders, the boxes are relatively small, indicating the trip duration doesn't differentiate too much between riders of the same gender. For males, half of the trips last longer than about 600 seconds. For females, half of all trips last longer than 550 seconds. For the unknown category, half of all trips last longer than 1000 seconds. Males had a bigger range for duration than females, but the unknown category had a larger range than both males and females. Overall, we can say males tended to travel further than females. The unknown group could be a combination of genders, so it's tough to make any inferences about their travel time, but the unknown group tended to travel further than both males and females.
