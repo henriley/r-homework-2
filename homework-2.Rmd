@@ -26,6 +26,7 @@ memory.size(max=TRUE)
 # Reading in the sample CSV I made
 total_sample <- read.csv('sample.csv', stringsAsFactors = TRUE)
 head(total_sample)
+
 ```
 
 I had to do this because my computer kept crashing.
@@ -45,7 +46,7 @@ gender_split <- ggplot(total_sample, aes(x=gender)) + geom_bar()
 gender_split
 ```
 
-We can see from this distribution that the majority of bikers are male.
+We can see from this distribution that the majority of bikers are male. The next closest gender group is female, but it is a much lower proportion of the population than male. The smallest group is the unkown gender group.
 
 ### Birth Year
 
@@ -74,7 +75,7 @@ birth_hist <- ggplot(total_sample, aes(x=birth.year,)) + geom_histogram(bins = 3
 birth_hist
 ```
 
-This histogram shows us that the majority of bikers skew younger. There are some very large outliers, but the years of those outliers lead me to believe they aren't legitimate, as no one born in the 1800s would be alive or riding a bike in 2019. Without the outliers, the graph would be relatively normally distributed with a slight skew left, making complete sense as younger people will bike more than older people.
+This histogram shows us that the majority of bikers are younger. There are some very large outliers, but the years of those outliers lead me to believe they aren't legitimate, as no one born in the 1800s would be alive or riding a bike in 2019. Without the outliers, the graph would be relatively normally distributed with a slight skew left, making complete sense as younger people will bike more than older people.
 
 ### Trip Duration
 
@@ -91,12 +92,12 @@ duration_sd
 duration_range <- range(total_sample$tripduration, na.rm=TRUE)
 duration_range
 ```
-The average trip duration is `r duration_mean` and the standard deviation of trip duration is `r duration_sd`. The shortest trip duration is `r duration_range[1]` and the longest trip duration was `r duration_range[2]`. The large difference in range, coupled with the large standard deviation when compared to the mean, could show that people do not return their bikes after use, leading to increased trip duration.
+The average trip duration is `r duration_mean` seconds and the standard deviation of trip duration is `r duration_sd` seconds. The shortest trip duration is `r duration_range[1]` seconds and the longest trip duration was `r duration_range[2]` seconds. The large difference in range, coupled with the large standard deviation when compared to the mean, could show that people do not return their bikes after use, leading to increased trip duration.
 
 ### Subscribers
 
 ```{r}
-# Seeing the split of genders who rented bikes
+# Seeing the split of user type who rented bikes
 subscriber_split <- ggplot(total_sample, aes(x=usertype)) + geom_bar()
 subscriber_split
 ```
@@ -139,23 +140,23 @@ bike_use_per_month <- round(tapply(total_sample$tripduration, months(as.Date(tot
 barplot(bike_use_per_month, las=2)
 ```
 
-The months with the most use are the Spring/Summer months. It starts to get warm in April, so the largest use time there could be an indication of people being happy with Winter being over. The increased use of May through July could be people just out an about enjoying warm weather. We don't see a huge decrease in use in the Winter months, indicating bikes are relatively important for travel.
+The months with the most use are the Spring/Summer months. The largest use time in June could be an indication of more people being available to rent bikes for Summer vacation. The increased use of April through August could be people just out an about enjoying warm weather. We don't see a huge decrease in use in the Winter months, indicating bikes are relatively important for travel to work or other functions.
 
 ### Which ages travel longer?
 
 ```{r, cache=TRUE}
-#Scatterplot of ages vs. distance
+#Scatterplot of ages vs. duration
 ages_dist_scatter <- ggplot(total_sample, aes(x=birth.year, y=tripduration)) + geom_point(size=2, alpha=.25)
 ages_dist_scatter
 ```
 
 ```{r, cache=TRUE}
-#Scatterplot of ages vs. distance with reduced y-axis
+#Scatterplot of ages vs. duration with reduced y-axis
 ages_dist_scatter_2 <- ggplot(total_sample, aes(x=birth.year, y=tripduration)) + geom_point(size=2, alpha=.25) + ylim(0,3750)
 ages_dist_scatter_2
 ```
 
-I included both scatterplots, one with outliers and one without, just to show the full effect of the visualization. As we can see, the younger people are, the higher their trip durations go, and the older people are, the lower their highest trip durations tend to go.
+I included both scatterplots, one with outliers and one without, just to show the full effect of the visualization. As we can see, the younger people are, the higher their trip durations go, and the older people are, the lower their highest trip durations tend to go. This scatterplot could also be an indication that more younger people use bikes than older people.
 
 ### Which gender travels longer?
 
@@ -171,4 +172,4 @@ gender_dist_box_2 <- ggplot(total_sample, aes(x=gender, y=tripduration, group=ge
 gender_dist_box_2
 ```
 
-These graphs suffer the same issue with outliers as the scatterplots, so I kept both to show the full effect again. As we can see for all the reported genders, the boxes are relatively small, indicating the trip duration doesn't differentiate too much between riders of the same gender. For males, half of the trips last longer than about 600 seconds. For females, half of all trips last longer than 550 seconds. For the unknown category, half of all trips last longer than 1000 seconds. Males had a bigger range for duration than females, but the unknown category had a larger range than both males and females. Overall, we can say males tended to travel further than females. The unknown group could be a combination of genders, so it's tough to make any inferences about their travel time, but the unknown group tended to travel further than both males and females.
+These graphs suffer the same issue with outliers as the scatterplots, so I kept both to show the full effect again. As we can see for all the reported genders, the boxes are relatively small, indicating the trip duration doesn't differentiate too much between riders of the same gender. For males, half of the trips last longer than about 600 seconds. For females, half of all trips last longer than 550 seconds. For the unknown category, half of all trips last longer than 1050 seconds. Males had a bigger range for duration than females, but the unknown category had a larger range than both males and females. Overall, we can say males tended to travel further than females. The unknown group could be a combination of genders, so it's tough to make any inferences about their travel time, but the unknown group tended to travel further than both males and females.
